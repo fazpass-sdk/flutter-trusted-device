@@ -3,36 +3,65 @@ package com.fazpass.flutter_trusted_device;
 import androidx.annotation.NonNull;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
-import io.flutter.plugin.common.MethodCall;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
+import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodChannel;
-import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
-import io.flutter.plugin.common.MethodChannel.Result;
 
-/** FlutterTrustedDevicePlugin */
-public class FlutterTrustedDevicePlugin implements FlutterPlugin, MethodCallHandler {
-  /// The MethodChannel that will the communication between Flutter and native Android
-  ///
-  /// This local reference serves to register the plugin with the Flutter Engine and unregister it
-  /// when the Flutter Engine is detached from the Activity
-  private MethodChannel channel;
+/** TrustedDeviceFlutterPlugin */
+public class FlutterTrustedDevicePlugin implements FlutterPlugin, ActivityAware {
+  private static final String METHOD_CHANNEL = "flutter_trusted_device";
+  private static final String EVENT_CHANNEL = "flutter_trusted_device_event";
+  private static final String CD_NOTIFICATION_CHANNEL = "flutter_trusted_device_cd_notification";
+
+  private final MethodChannelHandler methodChannelHandler = new MethodChannelHandler();
+  private final EventChannelHandler eventChannelHandler = new EventChannelHandler();
+  private final CDNotificationChannelHandler cdNotificationChannelHandler = new CDNotificationChannelHandler();
+
+  private MethodChannel methodChannel;
+  private EventChannel eventChannel;
+  private EventChannel cdNotificationChannel;
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
-    channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "flutter_trusted_device");
-    channel.setMethodCallHandler(this);
-  }
+    methodChannel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), METHOD_CHANNEL);
+    methodChannel.setMethodCallHandler(methodChannelHandler);
+    methodChannelHandler.setAppContext(flutterPluginBinding.getApplicationContext());
 
-  @Override
-  public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
-    if (call.method.equals("getPlatformVersion")) {
-      result.success("Android " + android.os.Build.VERSION.RELEASE);
-    } else {
-      result.notImplemented();
-    }
+    eventChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(), EVENT_CHANNEL);
+    eventChannel.setStreamHandler(eventChannelHandler);
+    eventChannelHandler.setAppContext(flutterPluginBinding.getApplicationContext());
+
+    cdNotificationChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(), CD_NOTIFICATION_CHANNEL);
+    cdNotificationChannel.setStreamHandler(cdNotificationChannelHandler);
   }
 
   @Override
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-    channel.setMethodCallHandler(null);
+    methodChannel.setMethodCallHandler(null);
+    methodChannelHandler.setAppContext(null);
+    eventChannel.setStreamHandler(null);
+    eventChannelHandler.setAppContext(null);
+    cdNotificationChannel.setStreamHandler(null);
   }
+
+  @Override
+  public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
+    methodChannelHandler.setActiveActivity(binding.getActivity());
+    eventChannelHandler.setActiveActivity(binding.getActivity());
+    cdNotificationChannelHandler.setActiveActivity(binding.getActivity());
+  }
+
+  @Override
+  public void onDetachedFromActivity() {
+    methodChannelHandler.setActiveActivity(null);
+    eventChannelHandler.setActiveActivity(null);
+    cdNotificationChannelHandler.setActiveActivity(null);
+  }
+
+  @Override
+  public void onReattachedToActivityForConfigChanges(@NonNull ActivityPluginBinding binding) {}
+
+  @Override
+  public void onDetachedFromActivityForConfigChanges() {}
 }
