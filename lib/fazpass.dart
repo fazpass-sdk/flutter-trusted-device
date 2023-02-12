@@ -33,16 +33,11 @@ class Fazpass {
 
   static void requestOtpByEmail(String email, String gateway,
       Function(RequestOtpResult) onSuccess, {
-      Function(String)? onIncomingMessage,
       Function(dynamic)? onError,
     }) {
     FlutterTrustedDevicePlatform.instance.fazpassRequestOtpByEmail(email, gateway).listen(
       (result) {
-        if (result is String) {
-          if (onIncomingMessage != null) {
-            onIncomingMessage(result);
-          }
-        } else {
+        if (result is! String) {
           onSuccess(RequestOtpResult(result['status'], result['message'], result['otp_id']));
         }
       },
