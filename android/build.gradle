@@ -38,5 +38,5 @@ android {
 }
 
 dependencies {
-    implementation 'com.github.fazpass-sdk:trusted-device:1.0.2-flutter'
+    implementation 'com.github.fazpass-sdk:trusted-device:1.0.4-flutter'
 }

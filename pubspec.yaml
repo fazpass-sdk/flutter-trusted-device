@@ -1,6 +1,6 @@
 name: flutter_trusted_device
 description: Flutter version of Fazpass Trusted Device SDK.
-version: 0.0.1-dev.1
+version: 0.0.1
 homepage: https://fazpass.com
 repository: https://github.com/fazpass-sdk/flutter-trusted-device
 
